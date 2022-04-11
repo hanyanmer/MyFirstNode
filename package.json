@@ -1,0 +1,28 @@
+{
+  "name": "my-node-template",
+  "version": "1.0.0",
+  "description": "- nodejs： [assert 断言 | Node.js API 文档 (nodejs.cn)](http://nodejs.cn/api/assert.html)\r - koa：[Koa (koajs) -- 基于 Node.js 平台的下一代 web 开发框架 | Koajs 中文文档 (bootcss.com)](https://koa.bootcss.com/)\r - 数据库对象映射：[入门 | Sequelize 中文文档 | Sequelize 中文网](https://www.sequelize.com.cn/core-concepts/getting-started)\r - 加密：[bcryptjs - npm (npmjs.com)](https://www.npmjs.com/package/bcryptjs)\r - 颁发token：[jsonwebtoken - npm (npmjs.com)](https://www.npmjs.com/package/jsonwebtoken)",
+  "main": "./src/main.js",
+  "scripts": {
+    "dev": "nodemon ./src/main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hanyanmer/my-node-template.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hanyanmer/my-node-template/issues"
+  },
+  "homepage": "https://github.com/hanyanmer/my-node-template#readme",
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "koa": "^2.13.4",
+    "koa-body": "^4.2.0",
+    "koa-router": "^10.1.1",
+    "mysql2": "^2.3.3",
+    "nodemon": "^2.0.15",
+    "sequelize": "^6.18.0"
+  }
+}
