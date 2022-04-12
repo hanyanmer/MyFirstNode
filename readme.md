@@ -9,6 +9,8 @@
 - 数据库对象映射：[入门 | Sequelize 中文文档 | Sequelize 中文网](https://www.sequelize.com.cn/core-concepts/getting-started)
 - 加密：[bcryptjs - npm (npmjs.com)](https://www.npmjs.com/package/bcryptjs)
 - 颁发token：[jsonwebtoken - npm (npmjs.com)](https://www.npmjs.com/package/jsonwebtoken)
+- 参数校验：[koa-parameter - npm (npmjs.com)](https://www.npmjs.com/package/koa-parameter)
+- 
 
 
 
@@ -185,7 +187,36 @@ app.use(KoaBody()) #这里注意，在所有注册中间件之前调用这个
 ctx.request.body 
 ```
 
+koa-body可以支持上传文件，通过配置可以打开上传文件
 
+配置如下：
+
+```js
+app.use(KoaBody({
+    multipart: true,
+    formidable: {
+        keepExtensions: true,
+        //这里有一个小注意点，如果写相对路径的话，是相对于cwd()这个目录的
+        uploadDir: path.join(__dirname, '../upload')
+    },
+    // 以下的请求的请求体会放到ctx.request.body 上，默认只有前三个请求方式会，这里添加一个delete的请求
+    parsedMethods: ['POST', 'PUT', 'PATCH', 'DELETE']
+}))
+```
+
+请求的处理:通过ctx.request.files就可以获取到文件对象
+
+```js
+router.post('/upload', (ctx, next) => {
+    //files后面的file是定义的key值
+    //这里拿到了上传文件的路径
+    //path.basename(ctx.request.files.file.path)可以拿到上传后的文件名（不带路径的）
+    console.log(ctx.request.files.file.path)
+    ctx.body = ctx.request
+})
+```
+
+详细使用参考koa-body使用文档
 
 ### 5.6 将请求拆分为controller、service层
 
@@ -254,9 +285,45 @@ model模型对象（通过这个对象即可以创建表，可以操作增删改
 
 
 
+### 5.7  controller在获取请求体之前的一些校验
+
+src/disposeRequestMiddle/user.middle.js
+
+```js
+const {userFormatError} = require('../constant/errorStatus')
+const userValidator = (ctx,next)=>{
+    const {user_name,password} = ctx.request.body 
+    if(!user_name||!password){
+        console.error('用户名或密码为空',ctx.request.body)
+        ctx.app.emit('error',userFormatError,ctx)
+        await next()
+    }
+}
+module.exports = {
+    userValidator,
+}
+```
 
 
-### 5.7 使用sequelize使用数据库
+
+```js
+const Router = require('koa-router')
+const { register } = require('../controller/user.contrller')
+const {userValidator} = '../disposeRequestMiddle/user.middle.js'
+
+const router = new Router()
+
+// 为了使代码逻辑更加清晰，这里可以拆分一个中间件层，封装多个中间件函数
+// 这些函数如： 参数校验（参数是否合法），是否是登录状态等等
+//router.post('/register', register)
+//先执行自定义的中间层参数校验函数，然后再去执行register处理请求，可以有多个中间层处理函数。
+router.post('/register',userValidator,register)
+module.exports = router 
+```
+
+
+
+### 5.8 使用sequelize使用数据库
 
 1. 安装sequelize 和数据库驱动mysql2
 
@@ -327,5 +394,84 @@ module.exports = User
 
 
 
-### 
+### 5.9 统一返回结果处理
 
+#### 5.9.1 统一的错误处理
+
+通过ctx.app.emit触发提交错误，app中监听app.on事件.两者传递参数约定好。
+
+constant/errorStatus.js
+
+这个文件的错误码和错误描述是前后端约定好的
+
+```js
+module.exports = {
+    userFormatError:{
+        code: '错误码',
+        message: '错误的描述',
+        result: '',
+    }
+}
+```
+
+user.controller.js
+
+```js
+console.err('用户名为空',ctx.request.body)
+ctx.app.emit('error',userFormatError,ctx)
+```
+
+app/index.js
+
+```js
+const errHandler = require('./errHandler')
+// 统一的错误处理
+app.on('error',errHandler)
+```
+
+errHandler.js
+
+这个函数的意义是根据规定的code码，返回给前端具体的错误status
+
+```js
+module.exports =(err,ctx)=> {
+    let status = ''//给一个默认的
+    switch(err.code){
+        case '':
+            status = ''
+            break
+        default:
+            status = ''
+    }
+    ctx.status = status 
+    ctx.body = err
+}
+```
+
+#### 5.9.2 统一的返回结果
+
+```js
+ctx.body = {
+    code: numberValue,
+    message: '返回的描述信息',
+    result:{
+        返回的值
+    }
+}
+```
+
+
+
+
+
+
+
+## 6 项目中需求的简述
+
+### 6.1  注册用户后密码加密
+
+
+
+### 6.2  颁发token验证
+
+## 7 总结：多看使用文档！！

@@ -16,5 +16,5 @@ const User = seq.define('test_user', {
     },
 })
 //如果表不存在，则创建该表（如果已经存在，则不执行任何操作）
-User.sync()
+// User.sync()
 module.exports = User
