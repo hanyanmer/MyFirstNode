@@ -506,8 +506,51 @@ ctx.body = {
 
 ### 6.1  注册用户后密码加密
 
+```js
+npm install bcryptjs
+const bcrypt = require('bcryptjs')
+const bcryptPassword = async (ctx,next)=>{
+    const {password} = ctx.request.body
+    //hash就是加密后的password
+	const salt = bcrypt.genSaltSync(10)
+	const hash = bcrypt.hashSync(password,salt)
+    
+    await next()
+}
+```
+
+用户登录后验证密码是否正确
+
+```js
+const verityLogin = async(ctx,next)=>{
+    const {user_name,password} = ctx.request.body
+    try{
+        //调用service层中的方法，根据用户名获取用户信息
+       const res = await getUserInfo({user_name}) 
+       
+       if(!res){
+           console.error('用户名不存在',{user_name})
+           return 
+       }
+        //密码是否匹配，不匹配的话就报错了，匹配的话继续往下执行
+       if(bcrypt.compareSync(password,res.password)){
+           return 
+       }
+    }catch(err){
+        console.log('用户名或密码不正确')
+        return 
+    }
+    
+    await next()
+}
+```
+
 
 
 ### 6.2  颁发token验证
+
+登录之后要进行登录状态的记录，通过token进行登录状态的记录
+
+
 
 ## 7 总结：多看使用文档！！
